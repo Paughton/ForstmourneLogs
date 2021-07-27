@@ -133,8 +133,6 @@ export class LogParser {
                 creature.setHPS(creature.getTotalHealingDone() / (encounter.getDurationInMilliseconds() / 1000));
             });
         });
-
-        this.displayData();
     }
 
     public displayData(): void {
@@ -144,11 +142,19 @@ export class LogParser {
         document.getElementById("encounterNameContainer").innerHTML = encounter.getName();
 
         let sortedCreaturesByDamage: Array<Creature> = encounter.getCreatures().sort((a: Creature, b: Creature) => (a.getTotalDamageDone() < b.getTotalDamageDone() ? 1 : -1));
+        let currentPosition: number = 0;
         sortedCreaturesByDamage.forEach((creature: Creature) => {
             if (creature.isPlayer() && creature.getName() != "unknown") {
+                currentPosition++;
                 let result = (`
                     <tr>
-                        <td>${creature.getName()}</td>
+                        <td>${currentPosition}</td>
+                        <td>
+                            <img src="images/${creature.getSpecImageURL()}" class="specImage"> 
+                            <font color="${creature.getClassColor()}">
+                                ${creature.getName()}
+                            </font>
+                        </td>
                         <td>${numberFormat(Math.floor(creature.getTotalDamageDone()))}</td>
                         <td>${numberFormat(Math.floor(creature.getDPS()))}
                     </tr>

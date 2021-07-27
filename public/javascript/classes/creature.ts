@@ -1,4 +1,5 @@
 import { Cast } from "./cast.js";
+import { IDConverters } from "../idconverters.js";
 
 export class Creature {
     private UID: string;
@@ -7,8 +8,17 @@ export class Creature {
     private totalHealingDone: number;
     private DPS: number;
     private HPS: number;
+
     private factionID: number;
     private specID: number;
+    private specProperties: IDConverters.SpecInformation = {
+        class: {
+            name: "nil",
+            color: "nil"
+        },
+        imageURL: "nil",
+        name: "nil"
+    };
 
     private casts: Array<Cast>;
     private pets: Array<Creature>;
@@ -67,6 +77,14 @@ export class Creature {
         return this.DPS;
     }
 
+    public getClassColor(): string {
+        return this.specProperties.class.color;
+    }
+
+    public getSpecImageURL(): string {
+        return this.specProperties.imageURL;
+    }
+
     /*
         Setters/Adders
     */
@@ -76,6 +94,13 @@ export class Creature {
 
     public setSpecID(specID: number): void {
         this.specID = specID;
+
+        let specProperties: IDConverters.SpecInformation = IDConverters.specIDConversion[specID];
+        if (typeof specProperties !== "undefined") {
+            this.specProperties = specProperties;
+        } else {
+            console.log(`Unknown spec ID: ${this.specID}`);
+        }
     }
 
     public setDPS(amount: number): void {

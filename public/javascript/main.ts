@@ -12,6 +12,7 @@ window.onload = function(): void {
 
             const logParser: LogParser = new LogParser(body, version, gameBuild, programVersion);
             logParser.parse();
+            logParser.displayData();
 
             document.getElementById("previousEncounterButton").onclick = () => { logParser.displayPreviousEncounter() };
             document.getElementById("nextEncounterButton").onclick = () => { logParser.displayNextEncounter() };

@@ -33,3 +33,12 @@ tbody th {
 tbody > tr:nth-child(even) {
     background-color: #d0e4f5;
 }
+
+.specImage {
+    height: 32px;
+    width: 32px;
+}
+
+#resultContainer {
+    font-size: 24px;
+}
