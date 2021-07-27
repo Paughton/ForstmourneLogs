@@ -10,7 +10,7 @@ window.onload = function(): void {
             let gameBuild: string = body["buildVersion"];
             let programVersion: string = body["programVersion"];
 
-            const logParser = new LogParser(body, version, gameBuild, programVersion);
+            const logParser: LogParser = new LogParser(body, version, gameBuild, programVersion);
             logParser.parse();
 
             document.getElementById("previousEncounterButton").onclick = () => { logParser.displayPreviousEncounter() };
