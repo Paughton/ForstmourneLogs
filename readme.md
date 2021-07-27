@@ -8,3 +8,10 @@ Frostmourne logs is a simple World of Warcraft log reader. Frostmourne Logs take
 * HTML
 * CSS
 * JavaScript
+
+## Typescript Compilation
+To compile execute the following commands:
+```SHELL
+cd public/javascript
+tsc main.ts --target esnext
+```
