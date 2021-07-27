@@ -1,44 +1,4 @@
-table {
-    font-family: "Verdana";
-    border: 1px solid #FFFFFF;
-    width: 75%;
-    border-collapse: collapse;
-    font-size: 18px;
-}
-
-th, td {
-    padding: 3px 2px;
-}
-
-thead {
-    background-color: #0B6FA4;
-    border-bottom: 5px solid #FFFFFF;
-}
-
-th {
-    font-family: "Trebuchet MS";
-    font-weight: bold;
-}
-
-thead th {
-    font-size: 24px;
-    color: #FFFFFF;
-    border-left: 2px solid #FFFFFF;
-}
-
-tbody th {
-    background-color: #d0e4f5;
-}
-
-tbody > tr:nth-child(even) {
-    background-color: #d0e4f5;
-}
-
 .specImage {
     height: 32px;
     width: 32px;
-}
-
-#resultContainer {
-    font-size: 24px;
 }

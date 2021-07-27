@@ -4,6 +4,7 @@ import { IDConverters } from "../idconverters.js";
 export class Creature {
     private UID: string;
     private name: string;
+    private realm: string;
     private totalDamageDone: number;
     private totalHealingDone: number;
     private DPS: number;
@@ -28,7 +29,8 @@ export class Creature {
     */
     constructor(UID: string, name: string) {
         this.UID = UID;
-        this.name = name;
+        this.name = name.split('-')[0];
+        this.realm = name.split('-')[1];
 
         this.totalDamageDone = 0;
         this.totalHealingDone = 0;

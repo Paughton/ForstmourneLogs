@@ -11,6 +11,7 @@ export class LogParser {
     private encounters: Array<Encounter>;
     private creatures: Array<Creature>;
     private currentEncounterIndex: number = 0;
+    private currentSelectedField: string = "damagedone";
 
     private damageDealtEvents: Array<string> = [
         "SPELL_DAMAGE",
@@ -133,34 +134,57 @@ export class LogParser {
                 creature.setHPS(creature.getTotalHealingDone() / (encounter.getDurationInMilliseconds() / 1000));
             });
         });
+
+        // Append dropdowns to the encoutner selector
+        document.getElementById("encounterSelector").innerHTML = "";
+        this.encounters.forEach((encounter: Encounter, encounterIndex: number) => {
+            let selectOptionResult: string = (`
+                <option value="${encounterIndex}">${encounter.getName()} (${encounter.getDurationFormat()})</option>
+            `);
+
+            document.getElementById("encounterSelector").insertAdjacentHTML("beforeend", selectOptionResult);
+        });
+
+        // When the encounter selector is changed, display the corresponding encounter
+        document.getElementById("encounterSelector").onchange = () => {
+            this.currentEncounterIndex = Number((<HTMLInputElement>document.getElementById("encounterSelector")).value);
+            this.displayData();
+        };
     }
 
     public displayData(): void {
         let encounter: Encounter = this.encounters[this.currentEncounterIndex];
         if (typeof encounter === "undefined") return;
 
-        document.getElementById("encounterNameContainer").innerHTML = encounter.getName();
+        document.getElementById("resultContainer").innerHTML = "";
 
         let sortedCreaturesByDamage: Array<Creature> = encounter.getCreatures().sort((a: Creature, b: Creature) => (a.getTotalDamageDone() < b.getTotalDamageDone() ? 1 : -1));
         let currentPosition: number = 0;
         sortedCreaturesByDamage.forEach((creature: Creature) => {
             if (creature.isPlayer() && creature.getName() != "unknown") {
                 currentPosition++;
-                let result = (`
-                    <tr>
-                        <td>${currentPosition}</td>
-                        <td>
-                            <img src="images/${creature.getSpecImageURL()}" class="specImage"> 
-                            <font color="${creature.getClassColor()}">
-                                ${creature.getName()}
-                            </font>
-                        </td>
-                        <td>${numberFormat(Math.floor(creature.getTotalDamageDone()))}</td>
-                        <td>${numberFormat(Math.floor(creature.getDPS()))}
-                    </tr>
-                `);
 
-                document.getElementById("resultContainer").insertAdjacentHTML("beforeend", result);
+                let tableResult: string = (``);
+                switch (this.currentSelectedField) {
+                    case "damagedone":
+                        tableResult = (`
+                            <tr>
+                                <td class="centerText" data-border="true">${currentPosition}</td>
+                                <td data-border="true">
+                                    <img src="images/${creature.getSpecImageURL()}" class="specImage"> 
+                                    <font color="${creature.getClassColor()}">
+                                        ${creature.getName()}
+                                    </font>
+                                </td>
+                                <td data-border="true">${numberFormat(Math.floor(creature.getTotalDamageDone()))}</td>
+                                <td data-border="true">${numberFormat(Math.floor(creature.getDPS()))}
+                            </tr>
+                        `);
+                        break;
+                }
+                
+
+                document.getElementById("resultContainer").insertAdjacentHTML("beforeend", tableResult);
             }
         });
     }
@@ -169,7 +193,6 @@ export class LogParser {
         this.currentEncounterIndex++;
         if (this.currentEncounterIndex >= this.encounters.length) this.currentEncounterIndex = 0;
 
-        document.getElementById("resultContainer").innerHTML = "";
         this.displayData();
     }
 
@@ -177,7 +200,6 @@ export class LogParser {
         this.currentEncounterIndex++;
         if (this.currentEncounterIndex < 0) this.currentEncounterIndex = this.encounters.length - 1;
 
-        document.getElementById("resultContainer").innerHTML = "";
         this.displayData();
     }
 };

@@ -1,4 +1,5 @@
 import { Creature } from "./creature.js";
+import { durationFormat } from "../util.js";
 
 export class Encounter {
     private startTime: Date;
@@ -48,6 +49,10 @@ export class Encounter {
 
     public getCombatants(): Array<Object> {
         return this.combatants;
+    }
+
+    public getDurationFormat(): string {
+        return durationFormat(this.getDurationInMilliseconds());
     }
 
     /*
