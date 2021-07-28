@@ -1555,6 +1555,26 @@ table[data-length="full"] {
     }
 }
 
+/***
+    Desktop Rules
+***/
+@media screen and (min-width: 768px) {
+    table th[data-length="tiny"],
+    table td[data-length="tiny"] {
+        width: 5%;
+    }
+
+    table th[data-length="small"],
+    table td[data-length="small"] {
+        width: 10%;
+    }
+
+    table th[data-length="medium"],
+    table td[data-length="medium"] {
+        width: 20%;
+    }
+}
+
 
 
 /***********************************
@@ -1680,3 +1700,38 @@ body[data-theme="dark"] .linkButton:hover {
 .linkButton[data-color="yellow"]:hover {
     color: #e9e900 !important;
 }
+
+/***********************************
+    PROGRESS BAR
+***********************************/
+/***
+    Universal Rules
+***/
+.progressBarContainer {
+    width: 100%;
+    border-radius: 5%;
+    text-align: center;
+    position: relative;
+}
+
+.progressBarContainer .textContainer {
+    position: relative;
+    z-index: 1; /* appear on top of progress bar container */
+}
+
+.progressBarContainer > .progressBar {
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/*
+    Dark Theme
+*/
+.progressBarContainer[data-theme="dark"] { 
+    background-color: #3a3a3a; 
+    color: white;
+}
+.progressBarContainer[data-theme="dark"] > .progressBar { background-color: #aaaaaa; }
+.progressBarContainer[data-theme="dark"] > .textContainer { text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }

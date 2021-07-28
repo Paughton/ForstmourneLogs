@@ -2,6 +2,7 @@ import { Encounter } from "./encounter.js";
 import { Creature } from "./creature.js";
 import { Cast } from "./cast.js";
 import { numberFormat } from "../util.js";
+import { Item } from "./item.js";
 
 export class LogParser {
     private body: JSON;
@@ -9,7 +10,6 @@ export class LogParser {
     private gameBuild: string;
     private programVersion: string;
     private encounters: Array<Encounter>;
-    private creatures: Array<Creature>;
     private currentEncounterIndex: number = 0;
     private currentSelectedField: string = "damagedone";
 
@@ -22,7 +22,8 @@ export class LogParser {
 
     private healEvents: Array<string> = [
         "SPELL_HEAL",
-        "SPELL_PERIODIC_HEAL"
+        "SPELL_PERIODIC_HEAL",
+        "SPELL_ABSORBED"
     ];
 
     constructor(body: JSON, version: number, gameBuild: string, programVersion: string) {
@@ -32,7 +33,6 @@ export class LogParser {
         this.programVersion = programVersion;
 
         this.encounters = Array<Encounter>();
-        this.creatures = Array<Creature>();
     }
 
     // Get creature in encounter
@@ -99,15 +99,22 @@ export class LogParser {
         });
 
         // Set all the player factionIDs and specIDs
+        // Also add all items to players
         this.encounters.forEach((encounter: Encounter) => {
             encounter.getCombatants().forEach((combatant: Object) => {
                 let creature: Creature = this.getCreatureWithUIDInEncounter(encounter, combatant["combatantUID"]);
                 creature.setFactionID(Number(combatant["factionID"]));
                 creature.setSpecID(Number(combatant["specID"]));
+
+                combatant["items"].forEach((item: JSON) => {
+                    if (item["level"] == "1" || item["level"] == "0") return;
+                    let newItem: Item = new Item(Number(item["ID"]), Number(item["level"]));
+                    creature.addItem(newItem);
+                });
             });
         });
 
-        // Calculate all creatures: DPS, HPS, Damage Done, and Healing Done
+        // Calculate all creatures: DPS, HPS, Damage Done, Healing Done, and Item Level
         this.encounters.forEach((encounter: Encounter) => {
             encounter.getCreatures().forEach((creature: Creature) => {
                 // Add creature casts amount to total damage/healing done
@@ -129,9 +136,21 @@ export class LogParser {
                     });
                 });
 
-                // Calculate DPS and HPS (for player)
+                // Get the item levels of all items
+                creature.getItems().forEach((item: Item) => {
+                    creature.addToTotalItemLevel(item.getLevel());
+                });
+
+                // If the creature is a player then add it's damage done to the whole encounter
+                if (creature.isPlayer()) {
+                    encounter.addToTotalGroupDamage(creature.getTotalDamageDone());
+                    encounter.addToTotalGroupHealing(creature.getTotalHealingDone());
+                }
+
+                // Calculate DPS and HPS (for player) and Item Level
                 creature.setDPS(creature.getTotalDamageDone() / (encounter.getDurationInMilliseconds() / 1000));
                 creature.setHPS(creature.getTotalHealingDone() / (encounter.getDurationInMilliseconds() / 1000));
+                creature.setItemLevel(Math.round(creature.getTotalItemLevel() / creature.getItems().length));
             });
         });
 
@@ -150,19 +169,45 @@ export class LogParser {
             this.currentEncounterIndex = Number((<HTMLInputElement>document.getElementById("encounterSelector")).value);
             this.displayData();
         };
+
+        // When the selector field is changed
+        document.getElementById("selectedFieldSelector").onchange = () => {
+            this.currentSelectedField = (<HTMLInputElement>document.getElementById("selectedFieldSelector")).value;
+            this.displayData();
+        };
+
+        console.log(this.body);
     }
 
     public displayData(): void {
         let encounter: Encounter = this.encounters[this.currentEncounterIndex];
         if (typeof encounter === "undefined") return;
 
+        console.log(this.encounters);
+
         document.getElementById("resultContainer").innerHTML = "";
 
-        let sortedCreaturesByDamage: Array<Creature> = encounter.getCreatures().sort((a: Creature, b: Creature) => (a.getTotalDamageDone() < b.getTotalDamageDone() ? 1 : -1));
+        let sortedCreatureArray: Array<Creature> = encounter.getCreatures();
+        if (this.currentSelectedField == "damagedone"){
+            sortedCreatureArray = encounter.getCreatures().sort((a: Creature, b: Creature) => (a.getTotalDamageDone() < b.getTotalDamageDone() ? 1 : -1));
+            document.getElementById("perSecondColumnHead").innerHTML = "DPS";
+        } else if (this.currentSelectedField == "healingdone") {
+            sortedCreatureArray = encounter.getCreatures().sort((a: Creature, b: Creature) => (a.getTotalHealingDone() < b.getTotalHealingDone() ? 1 : -1));
+            document.getElementById("perSecondColumnHead").innerHTML = "HPS";
+        }
+        
+        let topPlayer: Creature;
         let currentPosition: number = 0;
-        sortedCreaturesByDamage.forEach((creature: Creature) => {
+        sortedCreatureArray.forEach((creature: Creature) => {
             if (creature.isPlayer() && creature.getName() != "unknown") {
                 currentPosition++;
+
+                let barWidth: number = 100;
+                if (currentPosition == 1) topPlayer = creature;
+                if (topPlayer != creature) {
+                    if (this.currentSelectedField == "damagedone") barWidth = Math.floor(creature.getTotalDamageDone() / topPlayer.getTotalDamageDone() * 100);
+                    else if (this.currentSelectedField == "healingdone") barWidth = Math.floor(creature.getTotalHealingDone() / topPlayer.getTotalHealingDone() * 100);
+                }
 
                 let tableResult: string = (``);
                 switch (this.currentSelectedField) {
@@ -176,8 +221,36 @@ export class LogParser {
                                         ${creature.getName()}
                                     </font>
                                 </td>
-                                <td data-border="true">${numberFormat(Math.floor(creature.getTotalDamageDone()))}</td>
-                                <td data-border="true">${numberFormat(Math.floor(creature.getDPS()))}
+                                <td class="centerText" data-border="true">${creature.getItemLevel()}</td>
+                                <td data-border="true">
+                                    <div class="progressBarContainer" data-theme="dark">
+                                        <div class="progressBar" style="width: ${barWidth}%; background-color: ${creature.getClassColor()};">&nbsp;</div>
+                                        <div class="textContainer textShadowDark">${numberFormat(Math.floor(creature.getTotalDamageDone()))} (${Math.floor(creature.getTotalDamageDone() / encounter.getTotalGroupDamage() * 100)}%)</div>
+                                    </div>
+                                </td>
+                                <td class="centerText" data-border="true">${numberFormat(Math.floor(creature.getDPS()))}
+                            </tr>
+                        `);
+                        break;
+
+                    case "healingdone":
+                        tableResult = (`
+                            <tr>
+                                <td class="centerText" data-border="true">${currentPosition}</td>
+                                <td data-border="true">
+                                    <img src="images/${creature.getSpecImageURL()}" class="specImage"> 
+                                    <font color="${creature.getClassColor()}">
+                                        ${creature.getName()}
+                                    </font>
+                                </td>
+                                <td class="centerText" data-border="true">${creature.getItemLevel()}</td>
+                                <td data-border="true">
+                                    <div class="progressBarContainer" data-theme="dark">
+                                        <div class="progressBar" style="width: ${barWidth}%; background-color: ${creature.getClassColor()};">&nbsp;</div>
+                                        <div class="textContainer">${numberFormat(Math.floor(creature.getTotalHealingDone()))} (${Math.floor(creature.getTotalHealingDone() / encounter.getTotalGroupHealing() * 100)}%)</div>
+                                    </div>
+                                </td>
+                                <td class="centerText" data-border="true">${numberFormat(Math.floor(creature.getHPS()))}
                             </tr>
                         `);
                         break;

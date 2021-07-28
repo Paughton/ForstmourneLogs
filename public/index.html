@@ -5,6 +5,12 @@
         <script type="module" src="javascript/main.js"></script>
         <link rel="stylesheet" type="text/css" href="stylesheets/framework.css">
         <link rel="stylesheet" type="text/css" href="stylesheets/main.css">
+
+        <!--
+            Metadata
+        -->
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="utf-8">
     </head>
 
     <body data-theme="dark">
@@ -23,14 +29,19 @@
                 <select id="encounterSelector" data-theme="dark">
                     <option value="" selected>Loading Logs... Please Wait</option>
                 </select>
+                <select id="selectedFieldSelector" data-theme="dark">
+                    <option value="damagedone" selected>Damage Done</option>
+                    <option value="healingdone">Healing Done</option>
+                </select>
                 <br><br>
                 <table data-theme="dark" data-length="full">
                     <thead class="fontTrebuchet">
                         <tr>
-                            <th scope="col" data-border="true">#</th>
-                            <th scope="col" data-border="true">Name</th>
+                            <th scope="col" data-border="true" data-length="tiny">#</th>
+                            <th scope="col" data-border="true" data-length="medium">Name</th>
+                            <th scope="col" data-border="true" data-length="tiny">ilvl</th>
                             <th scope="col" data-border="true">Amount</th>
-                            <th scope="col" data-border="true">DPS</th>
+                            <th scope="col" data-border="true" id="perSecondColumnHead" data-length="small">DPS</th>
                         </tr>
                     </thead>
                     <tbody class="fontVerdana" id="resultContainer">

@@ -8,6 +8,8 @@ export class Encounter {
     private difficultyID: number;
     private name: string;
     private groupSize: number;
+    private totalGroupDamage: number = 0;
+    private totalGroupHealing: number = 0;
 
     private creatures: Array<Creature>;
     private combatants: Array<Object>;
@@ -55,6 +57,18 @@ export class Encounter {
         return durationFormat(this.getDurationInMilliseconds());
     }
 
+    public getName(): string {
+        return this.name;
+    }
+
+    public getTotalGroupDamage(): number {
+        return this.totalGroupDamage;
+    }
+
+    public getTotalGroupHealing(): number {
+        return this.totalGroupHealing;
+    }
+
     /*
         Setters/Adders
     */
@@ -62,7 +76,11 @@ export class Encounter {
         this.creatures.push(creature);
     }
 
-    public getName(): string {
-        return this.name;
+    public addToTotalGroupDamage(amount: number): void {
+        this.totalGroupDamage += amount;
+    }
+    
+    public addToTotalGroupHealing(amount: number): void {
+        this.totalGroupHealing += amount;
     }
 };
