@@ -15,3 +15,6 @@ To compile execute the following commands:
 cd public/javascript
 tsc main.ts --target esnext
 ```
+
+## Screenshots
+<img alt="Screenshot #1" src="https://github.com/Paughton/ForstmourneLogs/blob/main/public/images/screenshot1.png">
