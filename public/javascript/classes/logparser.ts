@@ -175,15 +175,11 @@ export class LogParser {
             this.currentSelectedField = (<HTMLInputElement>document.getElementById("selectedFieldSelector")).value;
             this.displayData();
         };
-
-        console.log(this.body);
     }
 
     public displayData(): void {
         let encounter: Encounter = this.encounters[this.currentEncounterIndex];
         if (typeof encounter === "undefined") return;
-
-        console.log(this.encounters);
 
         document.getElementById("resultContainer").innerHTML = "";
 
