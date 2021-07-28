@@ -150,125 +150,16 @@ export class LogParser {
                 // Calculate DPS and HPS (for player) and Item Level
                 creature.setDPS(creature.getTotalDamageDone() / (encounter.getDurationInMilliseconds() / 1000));
                 creature.setHPS(creature.getTotalHealingDone() / (encounter.getDurationInMilliseconds() / 1000));
-                creature.setItemLevel(Math.round(creature.getTotalItemLevel() / creature.getItems().length));
+                creature.setItemLevel(Math.floor(creature.getTotalItemLevel() / creature.getItems().length));
             });
         });
-
-        // Append dropdowns to the encoutner selector
-        document.getElementById("encounterSelector").innerHTML = "";
-        this.encounters.forEach((encounter: Encounter, encounterIndex: number) => {
-            let selectOptionResult: string = (`
-                <option value="${encounterIndex}">${encounter.getName()} (${encounter.getDurationFormat()})</option>
-            `);
-
-            document.getElementById("encounterSelector").insertAdjacentHTML("beforeend", selectOptionResult);
-        });
-
-        // When the encounter selector is changed, display the corresponding encounter
-        document.getElementById("encounterSelector").onchange = () => {
-            this.currentEncounterIndex = Number((<HTMLInputElement>document.getElementById("encounterSelector")).value);
-            this.displayData();
-        };
-
-        // When the selector field is changed
-        document.getElementById("selectedFieldSelector").onchange = () => {
-            this.currentSelectedField = (<HTMLInputElement>document.getElementById("selectedFieldSelector")).value;
-            this.displayData();
-        };
     }
 
-    public displayData(): void {
-        let encounter: Encounter = this.encounters[this.currentEncounterIndex];
-        if (typeof encounter === "undefined") return;
-
-        document.getElementById("resultContainer").innerHTML = "";
-
-        let sortedCreatureArray: Array<Creature> = encounter.getCreatures();
-        if (this.currentSelectedField == "damagedone"){
-            sortedCreatureArray = encounter.getCreatures().sort((a: Creature, b: Creature) => (a.getTotalDamageDone() < b.getTotalDamageDone() ? 1 : -1));
-            document.getElementById("perSecondColumnHead").innerHTML = "DPS";
-        } else if (this.currentSelectedField == "healingdone") {
-            sortedCreatureArray = encounter.getCreatures().sort((a: Creature, b: Creature) => (a.getTotalHealingDone() < b.getTotalHealingDone() ? 1 : -1));
-            document.getElementById("perSecondColumnHead").innerHTML = "HPS";
-        }
-        
-        let topPlayer: Creature;
-        let currentPosition: number = 0;
-        sortedCreatureArray.forEach((creature: Creature) => {
-            if (creature.isPlayer() && creature.getName() != "unknown") {
-                currentPosition++;
-
-                let barWidth: number = 100;
-                if (currentPosition == 1) topPlayer = creature;
-                if (topPlayer != creature) {
-                    if (this.currentSelectedField == "damagedone") barWidth = Math.floor(creature.getTotalDamageDone() / topPlayer.getTotalDamageDone() * 100);
-                    else if (this.currentSelectedField == "healingdone") barWidth = Math.floor(creature.getTotalHealingDone() / topPlayer.getTotalHealingDone() * 100);
-                }
-
-                let tableResult: string = (``);
-                switch (this.currentSelectedField) {
-                    case "damagedone":
-                        tableResult = (`
-                            <tr>
-                                <td class="centerText" data-border="true">${currentPosition}</td>
-                                <td data-border="true">
-                                    <img src="images/${creature.getSpecImageURL()}" class="specImage"> 
-                                    <font color="${creature.getClassColor()}">
-                                        ${creature.getName()}
-                                    </font>
-                                </td>
-                                <td class="centerText" data-border="true">${creature.getItemLevel()}</td>
-                                <td data-border="true">
-                                    <div class="progressBarContainer" data-theme="dark">
-                                        <div class="progressBar" style="width: ${barWidth}%; background-color: ${creature.getClassColor()};">&nbsp;</div>
-                                        <div class="textContainer textShadowDark">${numberFormat(Math.floor(creature.getTotalDamageDone()))} (${Math.floor(creature.getTotalDamageDone() / encounter.getTotalGroupDamage() * 100)}%)</div>
-                                    </div>
-                                </td>
-                                <td class="centerText" data-border="true">${numberFormat(Math.floor(creature.getDPS()))}
-                            </tr>
-                        `);
-                        break;
-
-                    case "healingdone":
-                        tableResult = (`
-                            <tr>
-                                <td class="centerText" data-border="true">${currentPosition}</td>
-                                <td data-border="true">
-                                    <img src="images/${creature.getSpecImageURL()}" class="specImage"> 
-                                    <font color="${creature.getClassColor()}">
-                                        ${creature.getName()}
-                                    </font>
-                                </td>
-                                <td class="centerText" data-border="true">${creature.getItemLevel()}</td>
-                                <td data-border="true">
-                                    <div class="progressBarContainer" data-theme="dark">
-                                        <div class="progressBar" style="width: ${barWidth}%; background-color: ${creature.getClassColor()};">&nbsp;</div>
-                                        <div class="textContainer">${numberFormat(Math.floor(creature.getTotalHealingDone()))} (${Math.floor(creature.getTotalHealingDone() / encounter.getTotalGroupHealing() * 100)}%)</div>
-                                    </div>
-                                </td>
-                                <td class="centerText" data-border="true">${numberFormat(Math.floor(creature.getHPS()))}
-                            </tr>
-                        `);
-                        break;
-                }
-                
-
-                document.getElementById("resultContainer").insertAdjacentHTML("beforeend", tableResult);
-            }
-        });
+    public getEncounters(): Array<Encounter> {
+        return this.encounters;
     }
 
-    public displayNextEncounter(): void {
-        this.currentEncounterIndex++;
-        if (this.currentEncounterIndex >= this.encounters.length) this.currentEncounterIndex = 0;
-
-        this.displayData();
-    }
-
-    public displayPreviousEncounter(): void {
-        this.currentEncounterIndex++;
-        if (this.currentEncounterIndex < 0) this.currentEncounterIndex = this.encounters.length - 1;
-
-        this.displayData();
+    public getProgramVersion(): string {
+        return this.programVersion;
     }
 };
