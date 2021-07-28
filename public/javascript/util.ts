@@ -7,5 +7,8 @@ export function durationFormat(durationInMilliseconds: number): string {
     let seconds: number = Math.floor(durationInMilliseconds / 1000);
     let minutes: number = Math.floor(seconds / 60);
 
-    return `${minutes}:${seconds - (minutes * 60)}`;
+    let secondsAsString: string = (seconds - (minutes * 60)).toString();
+    if (Number(secondsAsString) < 10) secondsAsString = "0" + secondsAsString;
+
+    return `${minutes}:${secondsAsString}`;
 }

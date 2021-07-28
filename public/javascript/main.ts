@@ -100,10 +100,12 @@ function displayData(logParser: LogParser): void {
                     <tr>
                         <td class="centerText" data-border="true">${currentPosition}</td>
                         <td data-border="true">
-                            <img src="images/${creature.getSpecImageURL()}" class="specImage"> 
-                            <font class="unselectable" color="${creature.getClassColor()}">
-                                ${creature.getName()}
-                            </font>
+                            <div class="nameContainer">
+                                <img src="images/${creature.getSpecImageURL()}" class="specImage"> 
+                                <font class="unselectable" color="${creature.getClassColor()}">
+                                    ${creature.getName()}
+                                </font>
+                            </div>
                         </td>
                         <td class="centerText" data-border="true">${creature.getItemLevel()}</td>
                         <td data-border="true">
@@ -122,10 +124,12 @@ function displayData(logParser: LogParser): void {
                     <tr>
                         <td class="centerText" data-border="true">${currentPosition}</td>
                         <td data-border="true">
-                            <img src="images/${creature.getSpecImageURL()}" class="specImage"> 
-                            <font class="unselectable" color="${creature.getClassColor()}">
-                                ${creature.getName()}
-                            </font>
+                            <div class="nameContainer">
+                                <img src="images/${creature.getSpecImageURL()}" class="specImage"> 
+                                <font class="unselectable" color="${creature.getClassColor()}">
+                                    ${creature.getName()}
+                                </font>
+                            </div>
                         </td>
                         <td class="centerText" data-border="true">${creature.getItemLevel()}</td>
                         <td data-border="true">

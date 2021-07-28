@@ -2,3 +2,25 @@
     height: 32px;
     width: 32px;
 }
+
+@media screen and (min-width: 768px) {
+    #resultContainer td {
+        vertical-align: middle;
+    }
+
+    .nameContainer {
+        position: relative;
+        height: 32px;
+        line-height: 32px;
+    }
+
+    .nameContainer .specImage {
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+
+    .nameContainer font {
+        margin-left: 35px;
+    }
+}
