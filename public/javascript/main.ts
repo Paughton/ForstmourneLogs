@@ -14,8 +14,8 @@ window.onload = function(): void {
     xmlHTTP.onreadystatechange = function(): void {
         if (xmlHTTP.readyState == XMLHttpRequest.DONE) {
             let body: JSON = JSON.parse(xmlHTTP.responseText);
-            let version: number = Number(body["programVersion"]);
-            let gameBuild: string = body["buildVersion"];
+            let version: number = Number(body["combatLogVersion"]);
+            let gameBuild: string = body["gameVersion"];
             let programVersion: string = body["programVersion"];
 
             const logParser: LogParser = new LogParser(body, version, gameBuild, programVersion);
@@ -51,6 +51,28 @@ window.onload = function(): void {
     xmlHTTP.open("GET", "http://localhost:8080/frostmournelogs/public/logs/output.json", true);
     xmlHTTP.send();
 };
+
+// Gets the data that should be append to the result table
+function getPrefixResult(currentPosition: number, creature: Creature): string {
+    return (`
+        <td class="centerText" data-border="true">${currentPosition}</td>
+        <td data-border="true">
+            <div class="nameContainer">
+                <img src="images/${creature.getSpecImageURL()}" class="specImage"> 
+                <font class="unselectable" color="${creature.getClassColor()}">
+                    ${creature.getName()}
+                </font>
+            </div>
+        </td>
+    `)
+}
+
+// Returns the progress bar
+function getProgressBar(barWidth: number, color: string): string {
+    return (`
+        <div class="progressBar" style="width: ${barWidth}%; background-color: ${color};">&nbsp;</div>
+    `);
+}
 
 // Appends all the data into the table, depending on the currentEncoutner and currentField
 function displayData(logParser: LogParser): void {
@@ -98,19 +120,10 @@ function displayData(logParser: LogParser): void {
             case "damagedone":
                 result = (`
                     <tr>
-                        <td class="centerText" data-border="true">${currentPosition}</td>
-                        <td data-border="true">
-                            <div class="nameContainer">
-                                <img src="images/${creature.getSpecImageURL()}" class="specImage"> 
-                                <font class="unselectable" color="${creature.getClassColor()}">
-                                    ${creature.getName()}
-                                </font>
-                            </div>
-                        </td>
-                        <td class="centerText" data-border="true">${creature.getItemLevel()}</td>
+                        ${getPrefixResult(currentPosition, creature)}
                         <td data-border="true">
                             <div class="progressBarContainer" data-theme="dark">
-                                <div class="progressBar" style="width: ${amountBarWidth}%; background-color: ${creature.getClassColor()};">&nbsp;</div>
+                                ${getProgressBar(amountBarWidth, creature.getClassColor())}
                                 <div class="textContainer textShadowDark">${numberFormat(Math.floor(creature.getTotalDamageDone()))} (${Math.floor(creature.getTotalDamageDone() / encounter.getTotalGroupDamage() * 100)}%)</div>
                             </div>
                         </td>
@@ -122,19 +135,10 @@ function displayData(logParser: LogParser): void {
             case "healingdone":
                 result = (`
                     <tr>
-                        <td class="centerText" data-border="true">${currentPosition}</td>
-                        <td data-border="true">
-                            <div class="nameContainer">
-                                <img src="images/${creature.getSpecImageURL()}" class="specImage"> 
-                                <font class="unselectable" color="${creature.getClassColor()}">
-                                    ${creature.getName()}
-                                </font>
-                            </div>
-                        </td>
-                        <td class="centerText" data-border="true">${creature.getItemLevel()}</td>
+                        ${getPrefixResult(currentPosition, creature)}
                         <td data-border="true">
                             <div class="progressBarContainer" data-theme="dark">
-                                <div class="progressBar" style="width: ${amountBarWidth}%; background-color: ${creature.getClassColor()};">&nbsp;</div>
+                                ${getProgressBar(amountBarWidth, creature.getClassColor())}
                                 <div class="textContainer">${numberFormat(Math.floor(creature.getTotalHealingDone()))} (${Math.floor(creature.getTotalHealingDone() / encounter.getTotalGroupHealing() * 100)}%)</div>
                             </div>
                         </td>

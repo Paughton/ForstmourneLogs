@@ -1,5 +1,4 @@
 import { Cast } from "./cast.js";
-import { Item } from "./item.js";
 import { IDConverters } from "../idconverters.js";
 
 export class Creature {
@@ -10,8 +9,6 @@ export class Creature {
     private totalHealingDone: number;
     private DPS: number;
     private HPS: number;
-    private totalItemLevel: number = 0;
-    private itemLevel: number = 0;
 
     private factionID: number;
     private specID: number;
@@ -26,7 +23,6 @@ export class Creature {
 
     private casts: Array<Cast>;
     private pets: Array<Creature>;
-    private items: Array<Item>;
 
     /*
         Constructors
@@ -46,7 +42,6 @@ export class Creature {
 
         this.casts = Array<Cast>();
         this.pets = Array<Creature>();
-        this.items = Array<Item>();
     }
 
     /*
@@ -62,10 +57,6 @@ export class Creature {
 
     public getCasts(): Array<Cast> {
         return this.casts;
-    }
-
-    public getItems(): Array<Item> {
-        return this.items;
     }
 
     public getTotalDamageDone(): number {
@@ -98,14 +89,6 @@ export class Creature {
 
     public getSpecImageURL(): string {
         return this.specProperties.imageURL;
-    }
-
-    public getTotalItemLevel(): number {
-        return this.totalItemLevel;
-    }
-
-    public getItemLevel(): number {
-        return this.itemLevel;
     }
 
     /*
@@ -148,17 +131,5 @@ export class Creature {
 
     public addToTotalHealingDone(amount: number): void {
         this.totalHealingDone += amount;
-    }
-
-    public addItem(item: Item): void {
-        this.items.push(item);
-    }
-
-    public addToTotalItemLevel(amount: number): void {
-        this.totalItemLevel += amount;
-    }
-
-    public setItemLevel(amount: number): void {
-        this.itemLevel = amount;
     }
 }

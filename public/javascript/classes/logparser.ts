@@ -1,8 +1,6 @@
 import { Encounter } from "./encounter.js";
 import { Creature } from "./creature.js";
 import { Cast } from "./cast.js";
-import { numberFormat } from "../util.js";
-import { Item } from "./item.js";
 
 export class LogParser {
     private body: JSON;
@@ -12,19 +10,6 @@ export class LogParser {
     private encounters: Array<Encounter>;
     private currentEncounterIndex: number = 0;
     private currentSelectedField: string = "damagedone";
-
-    private damageDealtEvents: Array<string> = [
-        "SPELL_DAMAGE",
-        "RANGE_DAMAGE",
-        "SPELL_PERIODIC_DAMAGE",
-        "SWING_DAMAGE_LANDED"
-    ];
-
-    private healEvents: Array<string> = [
-        "SPELL_HEAL",
-        "SPELL_PERIODIC_HEAL",
-        "SPELL_ABSORBED"
-    ];
 
     constructor(body: JSON, version: number, gameBuild: string, programVersion: string) {
         this.body = body;
@@ -63,53 +48,59 @@ export class LogParser {
     public parse(): void {
         // Create the encounters
         this.body["encounters"].forEach((encounter: JSON) => {
-            let newEncounter = new Encounter(encounter["startTimestamp"], encounter["endTimestamp"], encounter);
+            let newEncounter = new Encounter(encounter["timestamp"], encounter["timestampEnd"], encounter);
             this.encounters.push(newEncounter);
         });
 
         // Add creatures to the encounter and their casts that were casted during the encounter
+        // Also set the creatures encounter information (if applicable)
         // Also add their pets and their casts that were casted during the encounter
-        this.body["creatures"].forEach((creature: JSON) => {
+        this.body["entities"].forEach((creature: JSON) => {
             // Grab Casts
-            creature["casts"].forEach((cast: JSON) => {
-                let encounter: Encounter = this.encounters.find((obj: Encounter) => { return obj.timestampWasDuring(cast["timestamp"]); });
+            creature["events"].forEach((event: JSON) => {
+                switch (event["event"]) {
+                    case "DAMAGE":
+                    case "HEAL":
+                        var encounter: Encounter = this.encounters.find((obj: Encounter) => { return obj.timestampWasDuring(event["timestamp"]); });
 
-                if (typeof encounter !== "undefined") {
-                    let creatureCaster: Creature = this.getCreatureWithUIDInEncounter(encounter, creature["UID"], creature["name"]);
-                    let newCast: Cast = new Cast(cast);
+                        if (typeof encounter !== "undefined") {
+                            let creatureCaster: Creature = this.getCreatureWithUIDInEncounter(encounter, creature["UID"], creature["name"]);
+                            let newCast: Cast = new Cast(event);
 
-                    creatureCaster.addCast(newCast);
+                            creatureCaster.addCast(newCast);
+                        }
+                        break;
+
+                    case "COMBATANT":
+                        var encounter: Encounter = this.encounters.find((obj: Encounter) => { return obj.timestampWasDuring(event["timestamp"]); });
+
+                        if (typeof encounter !== "undefined") {
+                            let combatant: Creature = this.getCreatureWithUIDInEncounter(encounter, creature["UID"], creature["name"]);
+                            
+                            combatant.setFactionID(Number(event["factionID"]));
+                            combatant.setSpecID(Number(event["specID"]));
+                        }
+                        break;
                 }
             });
             
             // Grab Pet Casts
             creature["pets"].forEach((pet: JSON) => {
-                pet["casts"].forEach((cast: JSON) => {
-                    let encounter: Encounter = this.encounters.find((obj: Encounter) => { return obj.timestampWasDuring(cast["timestamp"]); });
-                    
-                    if (typeof encounter !== "undefined") {
-                        let creatureOwner: Creature = this.getCreatureWithUIDInEncounter(encounter, creature["UID"], creature["name"]);
-                        let creaturePet: Creature = this.getPetWithUIDInCreature(creatureOwner, pet["UID"], pet["name"]);
-                        let newCast: Cast = new Cast(cast);
+                pet["events"].forEach((event: JSON) => {
+                    switch (event["event"]) {
+                        case "DAMAGE":
+                        case "HEAL":
+                            let encounter: Encounter = this.encounters.find((obj: Encounter) => { return obj.timestampWasDuring(event["timestamp"]); });
+                            
+                            if (typeof encounter !== "undefined") {
+                                let creatureOwner: Creature = this.getCreatureWithUIDInEncounter(encounter, creature["UID"], creature["name"]);
+                                let creaturePet: Creature = this.getPetWithUIDInCreature(creatureOwner, pet["UID"], pet["name"]);
+                                let newCast: Cast = new Cast(event);
 
-                        creaturePet.addCast(newCast);
+                                creaturePet.addCast(newCast);
+                            }
+                            break;
                     }
-                });
-            });
-        });
-
-        // Set all the player factionIDs and specIDs
-        // Also add all items to players
-        this.encounters.forEach((encounter: Encounter) => {
-            encounter.getCombatants().forEach((combatant: Object) => {
-                let creature: Creature = this.getCreatureWithUIDInEncounter(encounter, combatant["combatantUID"]);
-                creature.setFactionID(Number(combatant["factionID"]));
-                creature.setSpecID(Number(combatant["specID"]));
-
-                combatant["items"].forEach((item: JSON) => {
-                    if (item["level"] == "1" || item["level"] == "0") return;
-                    let newItem: Item = new Item(Number(item["ID"]), Number(item["level"]));
-                    creature.addItem(newItem);
                 });
             });
         });
@@ -119,26 +110,21 @@ export class LogParser {
             encounter.getCreatures().forEach((creature: Creature) => {
                 // Add creature casts amount to total damage/healing done
                 creature.getCasts().forEach((cast: Cast) => {
-                    if (this.damageDealtEvents.includes(cast.getEvent())) creature.addToTotalDamageDone(cast.getAmount());
-                    else if (this.healEvents.includes(cast.getEvent())) creature.addToTotalHealingDone(cast.getAmount() - cast.getOverhealing());
+                    if (cast.getEvent() == "DAMAGE") creature.addToTotalDamageDone(cast.getAmount());
+                    else if (cast.getEvent() == "HEAL") creature.addToTotalHealingDone(cast.getAmount() - cast.getOverhealing());
                 });
 
                 // Add the creatures pets casts amount to toal damage/healing done (and to pets)
                 creature.getPets().forEach((pet: Creature) => {
                     pet.getCasts().forEach((cast: Cast) => {
-                        if (this.damageDealtEvents.includes(cast.getEvent())) {
+                        if (cast.getEvent() == "DAMAGE") {
                             creature.addToTotalDamageDone(cast.getAmount());
                             pet.addToTotalDamageDone(cast.getAmount());
-                        } else if (this.healEvents.includes(cast.getEvent())) {
+                        } else if (cast.getEvent() == "HEAL") {
                             creature.addToTotalHealingDone(cast.getAmount());
-                            pet.addToTotalDamageDone(cast.getAmount());
+                            pet.addToTotalHealingDone(cast.getAmount());
                         }
                     });
-                });
-
-                // Get the item levels of all items
-                creature.getItems().forEach((item: Item) => {
-                    creature.addToTotalItemLevel(item.getLevel());
                 });
 
                 // If the creature is a player then add it's damage done to the whole encounter
@@ -150,7 +136,6 @@ export class LogParser {
                 // Calculate DPS and HPS (for player) and Item Level
                 creature.setDPS(creature.getTotalDamageDone() / (encounter.getDurationInMilliseconds() / 1000));
                 creature.setHPS(creature.getTotalHealingDone() / (encounter.getDurationInMilliseconds() / 1000));
-                creature.setItemLevel(Math.floor(creature.getTotalItemLevel() / creature.getItems().length));
             });
         });
     }

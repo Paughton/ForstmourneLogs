@@ -7,8 +7,6 @@ export class Cast {
     private amount: number;
     private overhealing: number = 0;
     private critical: boolean = false;
-    private glancing: boolean = false;
-    private crushing: boolean = false;
 
     /*
         Constructors
@@ -18,18 +16,22 @@ export class Cast {
         this.event = body["event"];
         this.targetName = body["targetName"];
 
-        if (this.event == "SPELL_DAMAGE" || this.event == "SPELL_PERIODIC_DAMAGE" || this.event == "RANGE_DAMAGE") {
-            this.name = body["name"];
-            this.id = Number(body["id"]);
-        } else if (this.event == "SPELL_HEAL" || this.event == "SPELL_PERIODIC_HEAL") {
-            this.overhealing = Number(body["overhealing"]);
+        switch (this.event) {
+            case "DAMAGE":
+                if (typeof body["spellName"] !== "undefined") {
+                    this.name = body["spellName"];
+                    this.id = Number(body["spellID"]);
+                }
+                break;
+
+            case "HEAL":
+                this.overhealing = Number(body["overhealing"]);
+                break;
         }
 
         this.amount = Number(body["amount"]);
 
         if (typeof body["isCritical"] !== "undefined" && body["isCritical"] != "nil") this.critical = true;
-        if (typeof body["isGlancing"] !== "undefined" && body["isGlancing"] != "nil") this.glancing = true;
-        if (typeof body["isCrushing"] !== "undefined" && body["isCrushing"] != "nil") this.crushing = true;
     }
 
     /*

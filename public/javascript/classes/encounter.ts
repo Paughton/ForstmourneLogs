@@ -21,7 +21,7 @@ export class Encounter {
         this.startTime = new Date(startTimestamp);
         this.endTime = new Date(endTimestamp);
 
-        this.difficultyID = Number(body["difficultyID"]);
+        this.difficultyID = Number(body["difficulty"]);
         this.name = body["encounterName"];
         this.groupSize = Number(body["groupsize"]);
 
@@ -35,7 +35,7 @@ export class Encounter {
     public timestampWasDuring(timestamp: string): boolean {
         let time: Date = new Date(timestamp);
 
-        return (time.getTime() > this.startTime.getTime() && time.getTime() < this.endTime.getTime());
+        return (time.getTime() >= this.startTime.getTime() && time.getTime() <= this.endTime.getTime());
     }
 
     /*
