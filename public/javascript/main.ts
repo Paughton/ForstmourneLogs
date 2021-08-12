@@ -21,6 +21,8 @@ window.onload = function(): void {
             const logParser: LogParser = new LogParser(body, version, gameBuild, programVersion);
             logParser.parse();
 
+            console.log(logParser);
+
             // Append dropdowns to the encoutner selector
             document.getElementById("encounterSelector").innerHTML = "";
             logParser.getEncounters().forEach((encounter: Encounter, encounterIndex: number) => {
@@ -53,7 +55,7 @@ window.onload = function(): void {
 };
 
 // Gets the data that should be append to the result table
-function getPrefixResult(currentPosition: number, creature: Creature): string {
+function getPrefixResult(currentPosition: number|string, creature: Creature): string {
     return (`
         <td class="centerText" data-border="true">${currentPosition}</td>
         <td data-border="true">
@@ -64,7 +66,21 @@ function getPrefixResult(currentPosition: number, creature: Creature): string {
                 </font>
             </div>
         </td>
-    `)
+    `);
+}
+
+function customPrefixResult(currentPosition: number|string, imageURL: string, textColor: string, creature: Creature): string {
+    return (`
+        <td class="centerText" data-border="true">${currentPosition}</td>
+        <td data-border="true">
+            <div class="nameContainer">
+                <img src="images/${imageURL}" class="specImage"> 
+                <font class="unselectable" color="${textColor}">
+                    ${creature.getName()}
+                </font>
+            </div>
+        </td>
+    `);
 }
 
 // Returns the progress bar
@@ -78,6 +94,8 @@ function getProgressBar(barWidth: number, color: string): string {
 function displayData(logParser: LogParser): void {
     if (typeof logParser.getEncounters()[GLOBALS.currentEncounter] === "undefined") return;
     let encounter: Encounter = logParser.getEncounters()[GLOBALS.currentEncounter];
+
+    document.getElementById("mostValuablePlayer").innerHTML = logParser.getMostValuablePlayer();
 
     document.getElementById("resultContainer").innerHTML = "";
 
@@ -127,9 +145,21 @@ function displayData(logParser: LogParser): void {
                                 <div class="textContainer textShadowDark">${numberFormat(Math.floor(creature.getTotalDamageDone()))} (${Math.floor(creature.getTotalDamageDone() / encounter.getTotalGroupDamage() * 100)}%)</div>
                             </div>
                         </td>
-                        <td class="centerText" data-border="true">${numberFormat(Math.floor(creature.getDPS()))}
+                        <td class="centerText" data-border="true">${numberFormat(Math.floor(creature.getDPS()))}</td>
                     </tr>
                 `);
+
+                creature.getPets().forEach((pet: Creature) => {
+                    result += (`
+                        <tr>
+                            ${customPrefixResult("", "pet.png", creature.getClassColor(), pet)}
+                            <td class="centerText" data-border="true">
+                                ${numberFormat(Math.floor(pet.getTotalDamageDone()))} (${Math.floor(pet.getTotalDamageDone() / creature.getTotalDamageDone() * 100)}%)
+                            </td>
+                            <td class="centerText" data-border="true">${numberFormat(Math.floor(pet.getDPS()))}</td>
+                        </tr>
+                    `);
+                });
                 break;
 
             case "healingdone":
@@ -142,7 +172,7 @@ function displayData(logParser: LogParser): void {
                                 <div class="textContainer">${numberFormat(Math.floor(creature.getTotalHealingDone()))} (${Math.floor(creature.getTotalHealingDone() / encounter.getTotalGroupHealing() * 100)}%)</div>
                             </div>
                         </td>
-                        <td class="centerText" data-border="true">${numberFormat(Math.floor(creature.getHPS()))}
+                        <td class="centerText" data-border="true">${numberFormat(Math.floor(creature.getHPS()))}</td>
                     </tr>
                 `);
                 break;

@@ -25,6 +25,8 @@ export class Cast {
                 break;
 
             case "HEAL":
+                this.name = body["spellName"];
+                this.id = Number(body["spellID"]);
                 this.overhealing = Number(body["overhealing"]);
                 break;
         }

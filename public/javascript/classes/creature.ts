@@ -3,8 +3,8 @@ import { IDConverters } from "../idconverters.js";
 
 export class Creature {
     private UID: string;
-    private name: string;
-    private realm: string;
+    private name: string = "nil";
+    private realm: string = "nil";
     private totalDamageDone: number;
     private totalHealingDone: number;
     private DPS: number;

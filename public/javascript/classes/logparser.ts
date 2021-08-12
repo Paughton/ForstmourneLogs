@@ -4,16 +4,17 @@ import { Cast } from "./cast.js";
 
 export class LogParser {
     private body: JSON;
-    private version: number;
+    private version: string = "1.0";
+    private logVersion: number;
     private gameBuild: string;
     private programVersion: string;
     private encounters: Array<Encounter>;
-    private currentEncounterIndex: number = 0;
-    private currentSelectedField: string = "damagedone";
+    private mostValuablePlayer: string;
 
-    constructor(body: JSON, version: number, gameBuild: string, programVersion: string) {
+    constructor(body: JSON, logVersion: number, gameBuild: string, programVersion: string) {
         this.body = body;
-        this.version = version;
+        this.logVersion = logVersion;
+        this.programVersion = programVersion;
         this.gameBuild = gameBuild;
         this.programVersion = programVersion;
 
@@ -125,6 +126,9 @@ export class LogParser {
                             pet.addToTotalHealingDone(cast.getAmount());
                         }
                     });
+
+                    pet.setDPS(pet.getTotalDamageDone() / (encounter.getDurationInMilliseconds() / 1000));
+                    pet.setHPS(pet.getTotalHealingDone() / (encounter.getDurationInMilliseconds() / 1000));
                 });
 
                 // If the creature is a player then add it's damage done to the whole encounter
@@ -138,6 +142,29 @@ export class LogParser {
                 creature.setHPS(creature.getTotalHealingDone() / (encounter.getDurationInMilliseconds() / 1000));
             });
         });
+
+        // Get the most valuable player
+        let tempCreatures: Object = {};
+        this.encounters.forEach((encounter: Encounter) => {
+            encounter.getCreatures().forEach((creature: Creature) => {
+                if (creature.isPlayer()) {
+                    if (typeof(tempCreatures[creature.getUID()]) === "undefined") tempCreatures[creature.getUID()] = {name: creature.getName(), totalDamageDone: creature.getTotalDamageDone(), totalHealingdone: creature.getTotalHealingDone()};
+                    else {
+                        tempCreatures[creature.getUID()].totalDamageDone += creature.getTotalDamageDone();
+                        tempCreatures[creature.getUID()].totalHealingDone += creature.getTotalHealingDone();
+                    }
+                }
+            });
+        });
+
+        // Grab MVP
+        let mvpIndex: string = Object.keys(tempCreatures).sort((a: string, b: string) => {
+            return (tempCreatures[b].totalDamageDone + tempCreatures[b].totalHealingDone) - (tempCreatures[a].totalDamageDone + tempCreatures[a].totalHealingDone);
+        })[0];
+
+        this.mostValuablePlayer = tempCreatures[mvpIndex].name;
+
+        delete this.body;
     }
 
     public getEncounters(): Array<Encounter> {
@@ -146,5 +173,9 @@ export class LogParser {
 
     public getProgramVersion(): string {
         return this.programVersion;
+    }
+
+    public getMostValuablePlayer(): string {
+        return this.mostValuablePlayer;
     }
 };
